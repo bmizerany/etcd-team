@@ -5,5 +5,5 @@ import "code.google.com/p/gogoprotobuf/gogoproto/gogo.proto";
 message Record {
 	optional int64 type = 1 [(gogoproto.nullable) = false];
 	required uint32  crc  = 2 [(gogoproto.nullable) = false];
-	optional bytes  data = 3 [(gogoproto.nullable) = false];
+	optional bytes  data = 3;
 }

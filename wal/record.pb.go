@@ -27,7 +27,7 @@ var _ = math.Inf
 type Record struct {
 	Type             int64  `protobuf:"varint,1,opt,name=type" json:"type"`
 	Crc              uint32 `protobuf:"varint,2,req,name=crc" json:"crc"`
-	Data             []byte `protobuf:"bytes,3,opt,name=data" json:"data"`
+	Data             []byte `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 

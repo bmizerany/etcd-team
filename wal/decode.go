@@ -27,7 +27,7 @@ func (d *Decoder) Decode(rec *Record) error {
 	}
 
 	// TODO(bmizerany): reuse cached buf?
-	b = make([]byte, int64(l))
+	b = make([]byte, l)
 	if _, err := io.ReadFull(d.r, b); err != nil {
 		return err
 	}

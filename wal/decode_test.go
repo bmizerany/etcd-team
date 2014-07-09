@@ -4,37 +4,32 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+	"reflect"
 	"testing"
 
 	"code.google.com/p/gogoprotobuf/proto"
 )
 
 func TestDecode(t *testing.T) {
-	tests := []struct {
-		t int
-		s string
-	}{
-		{1, "a"},
-		{2, "b"},
-		{5, "x"},
+	tests := []*Record{
+		record(1, 7, "a"),
+		record(2, 8, "b"),
+		record(3, 9, "x"),
 	}
 
 	b := new(bytes.Buffer)
 	for _, tt := range tests {
-		tencode(b, tt.t, tt.s)
+		tencode(b, tt)
 	}
 
 	d := NewDecoder(b)
 	for i, tt := range tests {
-		r := new(Record)
-		if err := d.Decode(r); err != nil {
+		g := new(Record)
+		if err := d.Decode(g); err != nil {
 			t.Errorf("#%d: error - %s", i, err)
 		}
-		if g := int(r.Type); g != tt.t {
-			t.Errorf("#%d: r.Type = %d, want %d", i, g, tt.t)
-		}
-		if g := string(r.Data); g != tt.s {
-			t.Errorf("#%d: r.Data = %q, want %q", i, g, tt.s)
+		if !reflect.DeepEqual(g, tt) {
+			t.Errorf("got = %+v, want %v", g, tt)
 		}
 	}
 
@@ -43,8 +38,11 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func tencode(w io.Writer, t int, s string) {
-	rec := &Record{Type: int64(t), Data: []byte(s)}
+func record(index uint64, t int64, s string) *Record {
+	return &Record{Index: index, Prev: index - 1, Type: t, Data: []byte(s)}
+}
+
+func tencode(w io.Writer, rec *Record) {
 	rec.UpdateChecksum()
 	b := mustMarshal(rec)
 	mustWrite(w, int64(len(b)))

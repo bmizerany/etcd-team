@@ -25,15 +25,31 @@ var _ = &json.SyntaxError{}
 var _ = math.Inf
 
 type Record struct {
-	Type             int64  `protobuf:"varint,1,opt,name=type" json:"type"`
-	Crc              uint32 `protobuf:"varint,2,req,name=crc" json:"crc"`
-	Data             []byte `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+	Index            uint64 `protobuf:"varint,1,req,name=index" json:"index"`
+	Prev             uint64 `protobuf:"varint,2,req,name=prev" json:"prev"`
+	Type             int64  `protobuf:"varint,3,opt,name=type" json:"type"`
+	Crc              uint32 `protobuf:"varint,4,req,name=crc" json:"crc"`
+	Data             []byte `protobuf:"bytes,5,opt,name=data" json:"data,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *Record) Reset()         { *m = Record{} }
 func (m *Record) String() string { return proto.CompactTextString(m) }
 func (*Record) ProtoMessage()    {}
+
+func (m *Record) GetIndex() uint64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+func (m *Record) GetPrev() uint64 {
+	if m != nil {
+		return m.Prev
+	}
+	return 0
+}
 
 func (m *Record) GetType() int64 {
 	if m != nil {

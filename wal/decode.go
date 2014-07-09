@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-
-	"code.google.com/p/gogoprotobuf/proto"
 )
 
 var ErrInvalidChecksum = errors.New("wal: invalid checksum")
@@ -31,7 +29,7 @@ func (d *Decoder) Decode(rec *Record) error {
 	if _, err := io.ReadFull(d.r, b); err != nil {
 		return err
 	}
-	if err := proto.Unmarshal(b, rec); err != nil {
+	if err := rec.Unmarshal(b); err != nil {
 		return err
 	}
 	if !rec.IsValid() {

@@ -43,7 +43,7 @@ func record(index uint64, t int64, s string) *Record {
 }
 
 func tencode(w io.Writer, rec *Record) {
-	rec.UpdateChecksum()
+	rec.updateChecksum()
 	b := mustMarshal(rec)
 	mustWrite(w, int64(len(b)))
 	mustWrite(w, b)

@@ -32,7 +32,7 @@ func (d *Decoder) Decode(rec *Record) error {
 	if err := rec.Unmarshal(b); err != nil {
 		return err
 	}
-	if !rec.IsValid() {
+	if !rec.isValid() {
 		return ErrInvalidChecksum
 	}
 	return nil

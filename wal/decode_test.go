@@ -39,7 +39,7 @@ func TestDecode(t *testing.T) {
 }
 
 func record(index uint64, t int64, s string) *Record {
-	return &Record{Index: index, Prev: index - 1, Type: t, Data: []byte(s)}
+	return &Record{Index: index, Data: []byte(s)}
 }
 
 func tencode(w io.Writer, rec *Record) {

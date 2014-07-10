@@ -29,10 +29,8 @@ var _ = math.Inf
 
 type Record struct {
 	Index            uint64 `protobuf:"varint,1,req,name=index" json:"index"`
-	Prev             uint64 `protobuf:"varint,2,req,name=prev" json:"prev"`
-	Type             int64  `protobuf:"varint,3,opt,name=type" json:"type"`
-	Crc              uint32 `protobuf:"varint,4,req,name=crc" json:"crc"`
-	Data             []byte `protobuf:"bytes,5,opt,name=data" json:"data,omitempty"`
+	Crc              uint32 `protobuf:"varint,2,req,name=crc" json:"crc"`
+	Data             []byte `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
@@ -86,42 +84,12 @@ func (m *Record) Unmarshal(data []byte) error {
 				}
 				b := data[index]
 				index++
-				m.Prev |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return code_google_com_p_gogoprotobuf_proto.ErrWrongType
-			}
-			for shift := uint(0); ; shift += 7 {
-				if index >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[index]
-				index++
-				m.Type |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return code_google_com_p_gogoprotobuf_proto.ErrWrongType
-			}
-			for shift := uint(0); ; shift += 7 {
-				if index >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := data[index]
-				index++
 				m.Crc |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 5:
+		case 3:
 			if wireType != 2 {
 				return code_google_com_p_gogoprotobuf_proto.ErrWrongType
 			}
@@ -170,8 +138,6 @@ func (m *Record) Size() (n int) {
 	var l int
 	_ = l
 	n += 1 + sovRecord(uint64(m.Index))
-	n += 1 + sovRecord(uint64(m.Prev))
-	n += 1 + sovRecord(uint64(m.Type))
 	n += 1 + sovRecord(uint64(m.Crc))
 	if m.Data != nil {
 		l = len(m.Data)
@@ -216,15 +182,9 @@ func (m *Record) MarshalTo(data []byte) (n int, err error) {
 	i = encodeVarintRecord(data, i, uint64(m.Index))
 	data[i] = 0x10
 	i++
-	i = encodeVarintRecord(data, i, uint64(m.Prev))
-	data[i] = 0x18
-	i++
-	i = encodeVarintRecord(data, i, uint64(m.Type))
-	data[i] = 0x20
-	i++
 	i = encodeVarintRecord(data, i, uint64(m.Crc))
 	if m.Data != nil {
-		data[i] = 0x2a
+		data[i] = 0x1a
 		i++
 		i = encodeVarintRecord(data, i, uint64(len(m.Data)))
 		i += copy(data[i:], m.Data)

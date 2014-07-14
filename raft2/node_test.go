@@ -114,7 +114,7 @@ func TestCampaign(t *testing.T) {
 	for i, tt := range tests {
 		n := New(a, b, c)
 		n.Campaign()
-		if !n.IsCandidate() {
+		if !n.s.IsCandidate() {
 			t.Fatal("not candidate")
 		}
 		for _, v := range tt.ps {
@@ -124,7 +124,7 @@ func TestCampaign(t *testing.T) {
 		if g := n.hasMajority(); g != tt.w {
 			t.Errorf("#%d: hasMajority = %v, want %v", i, g, tt.w)
 		}
-		if g := n.IsLeader(); g != tt.w {
+		if g := n.s.IsLeader(); g != tt.w {
 			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.w)
 		}
 	}
@@ -137,7 +137,7 @@ func TestCampaignMessages(t *testing.T) {
 	g := messages(n.ReadMessages())
 	w := make(messages, 0)
 	for id, _ := range n.peers {
-		w = append(w, Message{To: id, State: *n.State, Mark: Mark{1, 1}})
+		w = append(w, Message{To: id, State: *n.s, Mark: Mark{1, 1}})
 	}
 	sort.Sort(g)
 	sort.Sort(w)

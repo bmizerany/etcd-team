@@ -50,7 +50,7 @@ func TestStateIsCandidate(t *testing.T) {
 
 	for i, tt := range tests {
 		if g := tt.s.IsCandidate(); g != tt.w {
-			t.Fatalf("#%d: IsCandidate != %v", i, g, tt.w)
+			t.Fatalf("#%d: IsCandidate != %v, want %v", i, g, tt.w)
 		}
 	}
 }
@@ -68,40 +68,43 @@ func ents(n ...int64) []Entry {
 	return es
 }
 
-func votes(term int64, ns ...int64) map[int64]State {
-	c := make(map[int64]State)
-	for i, v := range ns {
-		s := State{Id: int64(i + 1), Term: term, Vote: v}
-		c[s.Id] = s
-	}
-	return c
-}
-
 func TestCampaign(t *testing.T) {
 	type votes []struct {
 		id, term, vote int64
 	}
 
 	tests := []struct {
-		ps votes
-		w  bool
+		replies []Message
+		w       bool
 	}{
 		{
-			votes{{b, 1, b}, {c, 1, c}},
+			[]Message{
+				{State: State{Id: b, Vote: b, Term: 1}},
+				{State: State{Id: c, Vote: c, Term: 1}},
+			},
 			false,
 		},
 		{
-			votes{{b, 1, a}, {c, 1, b}},
+			[]Message{
+				{State: State{Id: b, Vote: a, Term: 1}},
+				{State: State{Id: c, Vote: b, Term: 1}},
+			},
 			true,
 		},
 		{
-			votes{{b, 1, a}, c: {c, 1, a}},
+			[]Message{
+				{State: State{Id: b, Vote: a, Term: 1}},
+				{State: State{Id: c, Vote: a, Term: 1}},
+			},
 			true,
 		},
 
 		// votes are all in previous term
 		{
-			votes{{b, 1, b}, {c, 1, c}},
+			[]Message{
+				{State: State{Id: b, Vote: a, Term: 0}},
+				{State: State{Id: c, Vote: a, Term: 0}},
+			},
 			false,
 		},
 	}
@@ -109,15 +112,8 @@ func TestCampaign(t *testing.T) {
 	for i, tt := range tests {
 		n := New(a, b, c)
 		n.Campaign()
-		if !n.s.IsCandidate() {
-			t.Fatal("not candidate")
-		}
-		for _, v := range tt.ps {
-			s := State{Id: v.id, Term: v.term, Vote: v.vote}
-			n.Step(Message{State: s})
-		}
-		if g := n.hasMajority(); g != tt.w {
-			t.Errorf("#%d: hasMajority = %v, want %v", i, g, tt.w)
+		for _, m := range tt.replies {
+			n.Step(m)
 		}
 		if g := n.s.IsLeader(); g != tt.w {
 			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.w)

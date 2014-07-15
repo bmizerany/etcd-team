@@ -20,42 +20,37 @@ func (ms messages) Swap(i, j int)      { ms[i], ms[j] = ms[j], ms[i] }
 
 func TestStateIsLeader(t *testing.T) {
 	tests := []struct {
-		id   int64
-		lead int64
-		w    bool
+		s State
+		w bool
 	}{
-		{1, 1, true},
-		{2, 2, true},
-		{1, 2, false},
-		{2, 1, false},
+		{State{Id: 1, Lead: 1}, true},
+		{State{Id: 2, Lead: 2}, true},
+		{State{Id: 1, Lead: 2}, false},
+		{State{Id: 2, Lead: 1}, false},
 	}
 
 	for i, tt := range tests {
-		s := &State{Id: tt.id, Lead: tt.lead}
-		if s.IsLeader() != tt.w {
-			t.Fatalf("#%d: IsLeader != %v", i, tt.w)
+		if g := tt.s.IsLeader(); g != tt.w {
+			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.w)
 		}
 	}
 }
 
 func TestStateIsCandidate(t *testing.T) {
 	tests := []struct {
-		id   int64
-		vote int64
-		lead int64
-		w    bool
+		s State
+		w bool
 	}{
-		{1, 1, 0, true},
-		{2, 2, 0, true},
-		{1, 2, 0, false},
-		{2, 1, 0, false},
-		{2, 2, 2, false},
+		{State{Id: 1, Vote: 1, Lead: 0}, true},
+		{State{Id: 2, Vote: 2, Lead: 0}, true},
+		{State{Id: 1, Vote: 2, Lead: 0}, false},
+		{State{Id: 2, Vote: 1, Lead: 0}, false},
+		{State{Id: 2, Vote: 2, Lead: 2}, false},
 	}
 
 	for i, tt := range tests {
-		s := &State{Id: tt.id, Vote: tt.vote, Lead: tt.lead}
-		if s.IsCandidate() != tt.w {
-			t.Fatalf("#%d: IsCandidate != %v", i, tt.w)
+		if g := tt.s.IsCandidate(); g != tt.w {
+			t.Fatalf("#%d: IsCandidate != %v", i, g, tt.w)
 		}
 	}
 }

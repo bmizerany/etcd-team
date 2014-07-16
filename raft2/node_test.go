@@ -109,13 +109,13 @@ func TestCampaign(t *testing.T) {
 
 	for i, tt := range tests {
 		tt.n.Campaign()
-		if len(tt.n.peers) > 0 && !tt.n.s.IsCandidate() {
+		if len(tt.n.peers) > 0 && !tt.n.IsCandidate() {
 			t.Errorf("#%d: expected candidate", i)
 		}
 		for _, m := range tt.replies {
 			tt.n.Step(m)
 		}
-		if g := tt.n.s.IsLeader(); g != tt.wantLeader {
+		if g := tt.n.IsLeader(); g != tt.wantLeader {
 			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.wantLeader)
 		}
 	}

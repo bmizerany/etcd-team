@@ -41,7 +41,7 @@ type Entry struct {
 type peers map[int64]State
 
 type Node struct {
-	s *State
+	State
 
 	// the state of all peers, not including self
 	peers peers
@@ -60,7 +60,7 @@ func New(id int64, peerids ...int64) *Node {
 		ps[pid] = State{}
 	}
 	n := &Node{
-		s:     &State{Id: id},
+		State: State{Id: id},
 		peers: ps,
 		log:   []Entry{{}},
 	}
@@ -68,12 +68,12 @@ func New(id int64, peerids ...int64) *Node {
 }
 
 func (n *Node) Campaign() {
-	n.s.Term++
-	n.s.Vote = n.s.Id
+	n.Term++
+	n.Vote = n.Id
 
 	if len(n.peers) == 0 {
 		// we have no peers so we automaticly win the election
-		n.s.Lead = n.s.Id
+		n.Lead = n.Id
 	} else {
 		l := n.log[len(n.log)-1]
 		for id := range n.peers {
@@ -108,14 +108,14 @@ func (n *Node) Step(m Message) {
 	n.peers[m.Id] = m.State
 
 	if n.hasMajority() {
-		n.s.Lead = n.s.Id
+		n.Lead = n.Id
 	}
 }
 
 func (n *Node) hasMajority() bool {
 	g := 0
 	for _, s := range n.peers {
-		if s.Term == n.s.Term && s.Vote == n.s.Id {
+		if s.Term == n.Term && s.Vote == n.Id {
 			g++
 		}
 	}
@@ -127,10 +127,10 @@ func (n *Node) hasMajority() bool {
 
 // send queues m in the outbox of messages. Messages sent to self are ignored.
 func (n *Node) send(m Message) {
-	if m.To == n.s.Id {
+	if m.To == n.Id {
 		return
 	}
-	m.State = *n.s
+	m.State = n.State
 	n.msgs = append(n.msgs, m)
 }
 

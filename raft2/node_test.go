@@ -63,7 +63,7 @@ func TestCampaign(t *testing.T) {
 	}{
 		{
 			New(a),
-			[]Message{},
+			nil,
 			true,
 		},
 		{

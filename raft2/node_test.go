@@ -68,6 +68,11 @@ func TestCampaign(t *testing.T) {
 		},
 		{
 			New(a, b, c),
+			nil,
+			false,
+		},
+		{
+			New(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: b, Term: 1}},
 				{State: State{Id: c, Vote: c, Term: 1}},

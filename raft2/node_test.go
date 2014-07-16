@@ -10,6 +10,8 @@ const (
 	a = iota + 1
 	b
 	c
+	d
+	e
 )
 
 type byTo []Message
@@ -94,6 +96,16 @@ func TestCampaign(t *testing.T) {
 				{State: State{Id: c, Vote: a, Term: 1}},
 			},
 			true,
+		},
+		{
+			// duplicate vote
+			New(a, b, c, d, e),
+			[]Message{
+				{State: State{Id: b, Vote: a, Term: 1}},
+				{State: State{Id: b, Vote: a, Term: 1}},
+				{State: State{Id: b, Vote: a, Term: 1}},
+			},
+			false,
 		},
 
 		// votes are all in previous term

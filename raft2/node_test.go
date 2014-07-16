@@ -57,10 +57,12 @@ func TestStateIsCandidate(t *testing.T) {
 
 func TestCampaign(t *testing.T) {
 	tests := []struct {
+		n       *Node
 		replies []Message
 		w       bool
 	}{
 		{
+			New(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: b, Term: 1}},
 				{State: State{Id: c, Vote: c, Term: 1}},
@@ -68,6 +70,7 @@ func TestCampaign(t *testing.T) {
 			false,
 		},
 		{
+			New(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 1}},
 				{State: State{Id: c, Vote: b, Term: 1}},
@@ -75,6 +78,7 @@ func TestCampaign(t *testing.T) {
 			true,
 		},
 		{
+			New(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 1}},
 				{State: State{Id: c, Vote: a, Term: 1}},
@@ -84,6 +88,7 @@ func TestCampaign(t *testing.T) {
 
 		// votes are all in previous term
 		{
+			New(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 0}},
 				{State: State{Id: c, Vote: a, Term: 0}},
@@ -93,18 +98,17 @@ func TestCampaign(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		n := New(a, b, c)
-		n.Campaign()
+		tt.n.Campaign()
 		for _, m := range tt.replies {
-			n.Step(m)
+			tt.n.Step(m)
 		}
-		if g := n.s.IsLeader(); g != tt.w {
+		if g := tt.n.s.IsLeader(); g != tt.w {
 			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.w)
 		}
 	}
 }
 
-func TestCampaignMessages(t *testing.T) {
+func TestCampaignSendsVoteRequests(t *testing.T) {
 	n := New(a, b, c)
 	n.log = append(n.log, Entry{1, 1})
 	n.Campaign()

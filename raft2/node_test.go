@@ -127,8 +127,8 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 	n.Campaign()
 	g := n.ReadMessages()
 	w := []Message{
-		{To: b, State: *n.s, Mark: Mark{1, 1}},
-		{To: c, State: *n.s, Mark: Mark{1, 1}},
+		{To: b, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+		{To: c, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
 	}
 	sort.Sort(byTo(g))
 	if !reflect.DeepEqual(g, w) {

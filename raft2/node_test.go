@@ -12,11 +12,11 @@ const (
 	c
 )
 
-type messages []Message
+type byTo []Message
 
-func (ms messages) Len() int           { return len(ms) }
-func (ms messages) Less(i, j int) bool { return ms[i].To < ms[j].To }
-func (ms messages) Swap(i, j int)      { ms[i], ms[j] = ms[j], ms[i] }
+func (ms byTo) Len() int           { return len(ms) }
+func (ms byTo) Less(i, j int) bool { return ms[i].To < ms[j].To }
+func (ms byTo) Swap(i, j int)      { ms[i], ms[j] = ms[j], ms[i] }
 
 func TestStateIsLeader(t *testing.T) {
 	tests := []struct {
@@ -125,13 +125,12 @@ func TestCampaignMessages(t *testing.T) {
 	n := New(a, b, c)
 	n.log = append(n.log, Entry{1, 1})
 	n.Campaign()
-	g := messages(n.ReadMessages())
-	w := make(messages, 0)
-	for id, _ := range n.peers {
-		w = append(w, Message{To: id, State: *n.s, Mark: Mark{1, 1}})
+	g := n.ReadMessages()
+	w := []Message{
+		{To: b, State: *n.s, Mark: Mark{1, 1}},
+		{To: c, State: *n.s, Mark: Mark{1, 1}},
 	}
-	sort.Sort(g)
-	sort.Sort(w)
+	sort.Sort(byTo(g))
 	if !reflect.DeepEqual(g, w) {
 		t.Errorf("\ng  = %+v\nwant %+v", g, w)
 	}

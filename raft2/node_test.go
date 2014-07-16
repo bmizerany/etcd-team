@@ -55,24 +55,7 @@ func TestStateIsCandidate(t *testing.T) {
 	}
 }
 
-func ents(n ...int64) []Entry {
-	if len(n)%2 != 0 {
-		panic("uneven number of args")
-	}
-
-	es := []Entry{{}}
-	for len(n) > 0 {
-		es = append(es, Entry{Term: n[0], Index: n[1]})
-		n = n[2:]
-	}
-	return es
-}
-
 func TestCampaign(t *testing.T) {
-	type votes []struct {
-		id, term, vote int64
-	}
-
 	tests := []struct {
 		replies []Message
 		w       bool

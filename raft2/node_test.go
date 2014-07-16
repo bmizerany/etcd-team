@@ -134,16 +134,38 @@ func TestCampaign(t *testing.T) {
 }
 
 func TestCampaignSendsVoteRequests(t *testing.T) {
-	n := New(a, b, c)
-	n.log = append(n.log, Entry{1, 1})
-	n.Campaign()
-	g := n.ReadMessages()
-	w := []Message{
-		{To: b, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
-		{To: c, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+	tests := []struct {
+		n        *Node
+		wantSent []Message
+	}{
+		{
+			New(a, b, c),
+			[]Message{
+				{To: b, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+				{To: c, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+			},
+		},
+		{
+			New(a, b, c, d, e),
+			[]Message{
+				{To: b, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+				{To: c, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+				{To: d, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+				{To: e, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
+			},
+		},
+		{
+			New(a),
+			nil,
+		},
 	}
-	sort.Sort(byTo(g))
-	if !reflect.DeepEqual(g, w) {
-		t.Errorf("\ng  = %+v\nwant %+v", g, w)
+	for i, tt := range tests {
+		tt.n.log = append(tt.n.log, Entry{1, 1})
+		tt.n.Campaign()
+		g := tt.n.ReadMessages()
+		sort.Sort(byTo(g))
+		if !reflect.DeepEqual(g, tt.wantSent) {
+			t.Errorf("#%d: \ng  = %+v\nwant %+v", i, g, tt.wantSent)
+		}
 	}
 }

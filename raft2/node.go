@@ -82,29 +82,8 @@ func (n *Node) Campaign() {
 	}
 }
 
-func (n *Node) isRemoved(id int64) bool {
-	// TODO: implement me.
-	return false
-}
-
-func (n *Node) isPeer(id int64) bool {
-	_, ok := n.peers[id]
-	return ok
-}
-
 // Step advances nodes state based on m.
 func (n *Node) Step(m Message) {
-	switch {
-	case n.isRemoved(m.Id):
-		n.send(Message{To: m.Id, Quit: true})
-		return
-	case !n.isPeer(m.Id):
-		// The sender isn't know to have been removed, but also isn't
-		// known to have been added. We can only ignore it for now; We
-		// must assume it will work things out on its own.
-		return
-	}
-
 	n.peers[m.Id] = m.State
 
 	if n.hasMajority() {

@@ -57,9 +57,9 @@ func TestStateIsCandidate(t *testing.T) {
 
 func TestCampaign(t *testing.T) {
 	tests := []struct {
-		n       *Node
-		replies []Message
-		w       bool
+		n          *Node
+		replies    []Message
+		wantLeader bool
 	}{
 		{
 			New(a),
@@ -107,8 +107,8 @@ func TestCampaign(t *testing.T) {
 		for _, m := range tt.replies {
 			tt.n.Step(m)
 		}
-		if g := tt.n.s.IsLeader(); g != tt.w {
-			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.w)
+		if g := tt.n.s.IsLeader(); g != tt.wantLeader {
+			t.Errorf("#%d: IsLeader = %v, want %v", i, g, tt.wantLeader)
 		}
 	}
 }

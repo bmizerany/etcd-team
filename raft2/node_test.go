@@ -109,6 +109,9 @@ func TestCampaign(t *testing.T) {
 
 	for i, tt := range tests {
 		tt.n.Campaign()
+		if len(tt.n.peers) > 0 && !tt.n.s.IsCandidate() {
+			t.Errorf("#%d: expected candidate", i)
+		}
 		for _, m := range tt.replies {
 			tt.n.Step(m)
 		}

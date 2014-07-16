@@ -71,9 +71,14 @@ func (n *Node) Campaign() {
 	n.s.Term++
 	n.s.Vote = n.s.Id
 
-	l := n.log[len(n.log)-1]
-	for id := range n.peers {
-		n.send(Message{To: id, Mark: Mark{l.Index, l.Term}})
+	if len(n.peers) == 0 {
+		// we have no peers so we automaticly win the election
+		n.s.Lead = n.s.Id
+	} else {
+		l := n.log[len(n.log)-1]
+		for id := range n.peers {
+			n.send(Message{To: id, Mark: Mark{l.Index, l.Term}})
+		}
 	}
 }
 

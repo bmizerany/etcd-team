@@ -62,6 +62,11 @@ func TestCampaign(t *testing.T) {
 		w       bool
 	}{
 		{
+			New(a),
+			[]Message{},
+			true,
+		},
+		{
 			New(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: b, Term: 1}},

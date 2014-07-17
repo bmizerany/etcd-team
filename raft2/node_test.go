@@ -169,3 +169,34 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 		}
 	}
 }
+
+func TestNewLeaderSendsInitAppend(t *testing.T) {
+	n := New(a, b, c)
+	n.Campaign()
+	n.ReadMessages() // discard vote requests
+
+	n.Step(Message{State: State{Term: 1, Id: b, Vote: a}}) // final vote in quorum
+	if !n.IsLeader() {
+		t.Errorf("expected leader")
+	}
+
+	g := n.ReadMessages()
+	sort.Sort(byTo(g))
+	w := []Message{
+		{
+			To:      b,
+			State:   State{Term: 1, Id: a, Vote: a, Lead: a},
+			Mark:    Mark{0, 0},
+			Entries: []Entry{{1, 1}},
+		},
+		{
+			To:      c,
+			State:   State{Term: 1, Id: a, Vote: a, Lead: a},
+			Mark:    Mark{0, 0},
+			Entries: []Entry{{1, 1}},
+		},
+	}
+	if !reflect.DeepEqual(g, w) {
+		t.Errorf("\ng  = %+v\nwant %+v", g, w)
+	}
+}

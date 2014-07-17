@@ -87,8 +87,32 @@ func (n *Node) Step(m Message) {
 	n.peers[m.Id] = m.State
 
 	if n.hasMajority() {
-		n.Lead = n.Id
+		n.becomeLeader()
 	}
+}
+
+func (n *Node) becomeLeader() {
+	n.Lead = n.Id
+
+	// append an nop to cause everyone to advance quickly
+	e := n.log[len(n.log)-1]
+	l := n.append(nil)
+	for id := range n.peers {
+		m := Message{
+			To:      id,
+			Mark:    Mark{e.Index, e.Term},
+			Entries: []Entry{l},
+		}
+		n.send(m)
+	}
+}
+
+func (n *Node) append(data []byte) Entry {
+	e := n.log[len(n.log)-1]
+	// TODO(bmizerany): add data field
+	e = Entry{Index: e.Index + 1, Term: n.Term}
+	n.log = append(n.log, e)
+	return e
 }
 
 func (n *Node) hasMajority() bool {

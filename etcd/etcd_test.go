@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"testing"
@@ -88,6 +89,14 @@ func BenchmarkServer(b *testing.B) {
 		os.Exit(0)
 		return
 	}
+
+	defer func() {
+		f, err := os.Create("heapdump")
+		if err != nil {
+			log.Fatal(err)
+		}
+		debug.WriteHeapDump(f.Fd())
+	}()
 
 	path, _ := ioutil.TempDir("", "etcd-")
 	defer os.RemoveAll(path)

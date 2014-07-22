@@ -86,8 +86,36 @@ func (n *Node) Campaign() {
 func (n *Node) Step(m Message) {
 	n.peers[m.Id] = m.State
 
+	switch {
+	case n.IsLeader():
+		// ensure they acknowledge us as leader
+		if m.Lead == n.Id {
+			n.handleAppendResponse(m)
+		}
+	case n.IsCandidate():
+		if m.Vote == n.Id {
+			n.handleVoteResponse(m)
+		}
+	}
+}
+
+func (n *Node) handleVoteResponse(m Message) {
 	if n.hasMajority() {
 		n.becomeLeader()
+	}
+}
+
+func (n *Node) handleAppendResponse(m Message) {
+	l := n.log[len(n.log)-1]
+	if m.Mark.Index < l.Index {
+		e := n.log[m.Mark.Index]
+		r := n.log[m.Mark.Index+1:]
+		m := Message{
+			To:      m.Id,
+			Mark:    Mark{e.Index, e.Term},
+			Entries: r,
+		}
+		n.send(m)
 	}
 }
 

@@ -172,13 +172,7 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 
 func TestNewLeaderSendsInitAppend(t *testing.T) {
 	n := New(a, b, c)
-	n.Campaign()
-	n.ReadMessages() // discard vote requests
-
-	n.Step(Message{State: State{Term: 1, Id: b, Vote: a}}) // final vote in quorum
-	if !n.IsLeader() {
-		t.Errorf("expected leader")
-	}
+	n.coerceLeader()
 
 	g := n.ReadMessages()
 	sort.Sort(byTo(g))
@@ -198,5 +192,32 @@ func TestNewLeaderSendsInitAppend(t *testing.T) {
 	}
 	if !reflect.DeepEqual(g, w) {
 		t.Errorf("\ng  = %+v\nwant %+v", g, w)
+	}
+}
+
+func TestLeaderRecvAppendResponse(t *testing.T) {
+	n := New(a, b, c)
+	n.coerceLeader()
+	n.ReadMessages() // discard init appends
+
+	n.Step(Message{State: State{Term: 1, Id: b, Lead: a}, Mark: Mark{0, 0}})
+
+	w := []Message{
+		{To: b, State: State{Term: 1, Id: a, Vote: a, Lead: a}, Entries: []Entry{{Term: 1, Index: 1}}, Mark: Mark{0, 0}},
+	}
+	g := n.ReadMessages()
+	sort.Sort(byTo(g))
+	if !reflect.DeepEqual(g, w) {
+		t.Errorf("\ng  = %+v\nwant %+v", g, w)
+	}
+}
+
+func (n *Node) coerceLeader() {
+	n.Campaign()
+	n.ReadMessages() // discard vote requests
+
+	n.Step(Message{State: State{Term: 1, Id: b, Vote: a}}) // final vote in quorum
+	if !n.IsLeader() {
+		panic("expected leader")
 	}
 }

@@ -219,6 +219,68 @@ func TestLeaderRecvAppendResponse(t *testing.T) {
 	}
 }
 
+func TestNew(t *testing.T) {
+	tests := []struct {
+		g *Node
+		w *Node
+		p bool
+	}{
+		{
+			g: New(a, nil),
+			w: &Node{
+				State: State{Id: a},
+				log:   []Entry{{}, {1, 1, 0}},
+				peers: peers{},
+			},
+		},
+		{
+			g: New(a, peerEntries(a)),
+			w: &Node{
+				State: State{Id: a},
+				log:   []Entry{{}, {1, 1, 0}},
+				peers: peers{},
+			},
+		},
+		{
+			g: New(a, peerEntries(a, b)),
+			w: &Node{
+				State: State{Id: a},
+				log:   []Entry{{}, {a, 1, 0}, {b, 2, 0}},
+				peers: peers{b: {}},
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		if !reflect.DeepEqual(tt.g, tt.w) {
+			t.Errorf("#%d: \ng  = %+v\nwant %+v", i, tt.g, tt.w)
+		}
+	}
+}
+
+func TestCheckLog(t *testing.T) {
+	tests := []struct {
+		id  int64
+		log []Entry
+	}{
+		{a, []Entry{{0, 90, 5}, {0, 90, 5}}},
+		{a, []Entry{{0, 90, 5}, {0, 99, 5}}},
+		{a, []Entry{{0, 90, 5}, {0, 91, 4}}},
+	}
+
+	for i, tt := range tests {
+		func() {
+			defer func() {
+				e := recover()
+				if e == nil {
+					t.Errorf("#%d: expected panic", i)
+				}
+			}()
+			New(tt.id, tt.log)
+		}()
+	}
+}
+
 func newTestNode(ids ...int64) *Node {
 	return New(ids[0], peerEntries(ids...))
 }

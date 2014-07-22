@@ -73,9 +73,9 @@ func New(id int64, log []Entry) *Node {
 	}
 
 	for _, e := range log[1:] {
-		if l.Index+1 != e.Index {
-			// TODO(bmizerany): don't panic... return error
-			panic("bad log!")
+		if l.Index+1 != e.Index || l.Term > e.Term {
+			// TODO(bmizerany): write function CheckLog that returns errors and positions thereof.
+			panic("raft: corrupted log")
 		}
 		if e.Id != 0 && e.Id != n.Id {
 			n.peers[e.Id] = State{}

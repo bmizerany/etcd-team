@@ -64,17 +64,17 @@ func TestCampaign(t *testing.T) {
 		wantLeader bool
 	}{
 		{
-			New(a),
+			newTestNode(a),
 			nil,
 			true,
 		},
 		{
-			New(a, b, c),
+			newTestNode(a, b, c),
 			nil,
 			false,
 		},
 		{
-			New(a, b, c),
+			newTestNode(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: b, Term: 1}},
 				{State: State{Id: c, Vote: c, Term: 1}},
@@ -82,7 +82,7 @@ func TestCampaign(t *testing.T) {
 			false,
 		},
 		{
-			New(a, b, c),
+			newTestNode(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 1}},
 				{State: State{Id: c, Vote: b, Term: 1}},
@@ -90,7 +90,7 @@ func TestCampaign(t *testing.T) {
 			true,
 		},
 		{
-			New(a, b, c),
+			newTestNode(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 1}},
 				{State: State{Id: c, Vote: a, Term: 1}},
@@ -99,7 +99,7 @@ func TestCampaign(t *testing.T) {
 		},
 		{
 			// duplicate vote
-			New(a, b, c, d, e),
+			newTestNode(a, b, c, d, e),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 1}},
 				{State: State{Id: b, Vote: a, Term: 1}},
@@ -110,7 +110,7 @@ func TestCampaign(t *testing.T) {
 
 		// votes are all in previous term
 		{
-			New(a, b, c),
+			newTestNode(a, b, c),
 			[]Message{
 				{State: State{Id: b, Vote: a, Term: 0}},
 				{State: State{Id: c, Vote: a, Term: 0}},
@@ -139,14 +139,14 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 		wantSent []Message
 	}{
 		{
-			New(a, b, c),
+			newTestNode(a, b, c),
 			[]Message{
 				{To: b, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
 				{To: c, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
 			},
 		},
 		{
-			New(a, b, c, d, e),
+			newTestNode(a, b, c, d, e),
 			[]Message{
 				{To: b, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
 				{To: c, State: State{Term: 1, Id: a, Vote: a}, Mark: Mark{1, 1}},
@@ -155,12 +155,12 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 			},
 		},
 		{
-			New(a),
+			newTestNode(a),
 			nil,
 		},
 	}
 	for i, tt := range tests {
-		tt.n.log = append(tt.n.log, Entry{1, 1})
+		tt.n.log = append(tt.n.log, Entry{0, 1, 1})
 		tt.n.Campaign()
 		g := tt.n.ReadMessages()
 		sort.Sort(byTo(g))
@@ -171,7 +171,7 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 }
 
 func TestNewLeaderSendsInitAppend(t *testing.T) {
-	n := New(a, b, c)
+	n := newTestNode(a, b, c)
 	n.coerceLeader()
 
 	g := n.ReadMessages()
@@ -180,14 +180,14 @@ func TestNewLeaderSendsInitAppend(t *testing.T) {
 		{
 			To:      b,
 			State:   State{Term: 1, Id: a, Vote: a, Lead: a},
-			Mark:    Mark{0, 0},
-			Entries: []Entry{{1, 1}},
+			Mark:    Mark{3, 0},
+			Entries: []Entry{{0, 4, 1}},
 		},
 		{
 			To:      c,
 			State:   State{Term: 1, Id: a, Vote: a, Lead: a},
-			Mark:    Mark{0, 0},
-			Entries: []Entry{{1, 1}},
+			Mark:    Mark{3, 0},
+			Entries: []Entry{{0, 4, 1}},
 		},
 	}
 	if !reflect.DeepEqual(g, w) {
@@ -196,20 +196,39 @@ func TestNewLeaderSendsInitAppend(t *testing.T) {
 }
 
 func TestLeaderRecvAppendResponse(t *testing.T) {
-	n := New(a, b, c)
+	n := newTestNode(a, b, c)
 	n.coerceLeader()
 	n.ReadMessages() // discard init appends
 
 	n.Step(Message{State: State{Term: 1, Id: b, Lead: a}, Mark: Mark{0, 0}})
 
 	w := []Message{
-		{To: b, State: State{Term: 1, Id: a, Vote: a, Lead: a}, Entries: []Entry{{Term: 1, Index: 1}}, Mark: Mark{0, 0}},
+		{
+			To:    b,
+			State: State{Term: 1, Id: a, Vote: a, Lead: a},
+			Mark:  Mark{0, 0},
+
+			// entries including init peer list and nop added by leader
+			Entries: []Entry{{a, 1, 0}, {b, 2, 0}, {c, 3, 0}, {0, 4, 1}},
+		},
 	}
 	g := n.ReadMessages()
 	sort.Sort(byTo(g))
 	if !reflect.DeepEqual(g, w) {
 		t.Errorf("\ng  = %+v\nwant %+v", g, w)
 	}
+}
+
+func newTestNode(ids ...int64) *Node {
+	return New(ids[0], peerEntries(ids...)...)
+}
+
+func peerEntries(ids ...int64) []Entry {
+	log := []Entry{{}}
+	for _, id := range ids {
+		log = append(log, Entry{Index: int64(len(log)), Id: id})
+	}
+	return log
 }
 
 func (n *Node) coerceLeader() {

@@ -34,6 +34,7 @@ type Mark struct {
 }
 
 type Entry struct {
+	Id    int64
 	Index int64
 	Term  int64
 }
@@ -51,19 +52,36 @@ type Node struct {
 	msgs []Message
 }
 
-func New(id int64, peerids ...int64) *Node {
-	if id == 0 {
-		panic("raft: id cannot be 0")
-	}
-	ps := make(peers)
-	for _, pid := range peerids {
-		ps[pid] = State{}
-	}
+func New(id int64, log ...Entry) *Node {
 	n := &Node{
 		State: State{Id: id},
-		peers: ps,
-		log:   []Entry{{}},
+		peers: make(peers),
+		log:   log,
 	}
+
+	if len(log) == 0 {
+		// be paranoid
+		panic("raft: log cannot be len 0")
+	}
+
+	l := log[0]
+
+	if l.Index == 0 && l.Term != 0 {
+		// be very paranoid
+		panic("index 0 does not have term 0")
+	}
+
+	for _, e := range log[1:] {
+		if l.Index+1 != e.Index {
+			// TODO(bmizerany): don't panic... return error
+			panic("bad log!")
+		}
+		if e.Id != 0 && e.Id != n.Id {
+			n.peers[e.Id] = State{}
+		}
+		l = e
+	}
+
 	return n
 }
 

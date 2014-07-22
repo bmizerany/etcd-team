@@ -52,16 +52,17 @@ type Node struct {
 	msgs []Message
 }
 
-func New(id int64, log ...Entry) *Node {
+func New(id int64, log []Entry) *Node {
 	n := &Node{
 		State: State{Id: id},
 		peers: make(peers),
 		log:   log,
 	}
 
-	if len(log) == 0 {
-		// be paranoid
-		panic("raft: log cannot be len 0")
+	if len(n.log) == 0 {
+		// bootstrapping
+		n.log = []Entry{{}, {Index: 1, Id: id}}
+		return n
 	}
 
 	l := log[0]

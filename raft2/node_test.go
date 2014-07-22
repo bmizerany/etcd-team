@@ -220,7 +220,7 @@ func TestLeaderRecvAppendResponse(t *testing.T) {
 }
 
 func newTestNode(ids ...int64) *Node {
-	return New(ids[0], peerEntries(ids...)...)
+	return New(ids[0], peerEntries(ids...))
 }
 
 func peerEntries(ids ...int64) []Entry {

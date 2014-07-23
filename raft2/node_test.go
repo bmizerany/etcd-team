@@ -160,7 +160,7 @@ func TestCampaignSendsVoteRequests(t *testing.T) {
 		},
 	}
 	for i, tt := range tests {
-		tt.n.log = append(tt.n.log, Entry{0, 1, 1})
+		tt.n.log = append(tt.n.log, Entry{Index: 1, Term: 1})
 		tt.n.Campaign()
 		g := tt.n.ReadMessages()
 		sort.Sort(byTo(g))
@@ -180,14 +180,14 @@ func TestNewLeaderSendsInitAppend(t *testing.T) {
 		{
 			To:      b,
 			State:   State{Term: 1, Id: a, Vote: a, Lead: a},
-			Mark:    Mark{3, 0},
-			Entries: []Entry{{0, 4, 1}},
+			Mark:    Mark{1, 0},
+			Entries: []Entry{{Index: 2, Term: 1}},
 		},
 		{
 			To:      c,
 			State:   State{Term: 1, Id: a, Vote: a, Lead: a},
-			Mark:    Mark{3, 0},
-			Entries: []Entry{{0, 4, 1}},
+			Mark:    Mark{1, 0},
+			Entries: []Entry{{Index: 2, Term: 1}},
 		},
 	}
 	if !reflect.DeepEqual(g, w) {
@@ -209,7 +209,10 @@ func TestLeaderRecvAppendResponse(t *testing.T) {
 			Mark:  Mark{0, 0},
 
 			// entries including init peer list and nop added by leader
-			Entries: []Entry{{a, 1, 0}, {b, 2, 0}, {c, 3, 0}, {0, 4, 1}},
+			Entries: []Entry{
+				{Index: 1, Peers: []int64{a, b, c}},
+				{Index: 2, Term: 1},
+			},
 		},
 	}
 	g := n.ReadMessages()
@@ -229,23 +232,17 @@ func TestNew(t *testing.T) {
 			g: New(a, nil),
 			w: &Node{
 				State: State{Id: a},
-				log:   []Entry{{}, {1, 1, 0}},
+
+				// start the world at Term 0
+				log:   []Entry{{}, {Index: 1, Id: a, Term: 0}},
 				peers: peers{},
 			},
 		},
 		{
-			g: New(a, peerEntries(a)),
+			g: newTestNode(a, b),
 			w: &Node{
 				State: State{Id: a},
-				log:   []Entry{{}, {1, 1, 0}},
-				peers: peers{},
-			},
-		},
-		{
-			g: New(a, peerEntries(a, b)),
-			w: &Node{
-				State: State{Id: a},
-				log:   []Entry{{}, {a, 1, 0}, {b, 2, 0}},
+				log:   []Entry{{}, {Index: 1, Peers: []int64{a, b}}},
 				peers: peers{b: {}},
 			},
 		},
@@ -263,9 +260,9 @@ func TestCheckLog(t *testing.T) {
 		id  int64
 		log []Entry
 	}{
-		{a, []Entry{{0, 90, 5}, {0, 90, 5}}},
-		{a, []Entry{{0, 90, 5}, {0, 99, 5}}},
-		{a, []Entry{{0, 90, 5}, {0, 91, 4}}},
+		{a, []Entry{{Index: 90, Term: 5}, {Index: 90, Term: 5}}},
+		{a, []Entry{{Index: 90, Term: 5}, {Index: 99, Term: 5}}},
+		{a, []Entry{{Index: 90, Term: 5}, {Index: 91, Term: 4}}},
 	}
 
 	for i, tt := range tests {
@@ -282,15 +279,7 @@ func TestCheckLog(t *testing.T) {
 }
 
 func newTestNode(ids ...int64) *Node {
-	return New(ids[0], peerEntries(ids...))
-}
-
-func peerEntries(ids ...int64) []Entry {
-	log := []Entry{{}}
-	for _, id := range ids {
-		log = append(log, Entry{Index: int64(len(log)), Id: id})
-	}
-	return log
+	return New(ids[0], []Entry{{}, {Index: 1, Peers: ids}})
 }
 
 func (n *Node) coerceLeader() {

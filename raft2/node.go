@@ -35,6 +35,7 @@ type Mark struct {
 
 type Entry struct {
 	Id    int64
+	Peers []int64
 	Index int64
 	Term  int64
 }
@@ -72,16 +73,26 @@ func New(id int64, log []Entry) *Node {
 		panic("index 0 does not have term 0")
 	}
 
+	var pids []int64
 	for _, e := range log[1:] {
 		if l.Index+1 != e.Index || l.Term > e.Term {
 			// TODO(bmizerany): write function CheckLog that returns errors and positions thereof.
 			panic("raft: corrupted log")
 		}
-		if e.Id != 0 && e.Id != n.Id {
-			n.peers[e.Id] = State{}
+		if e.Peers != nil {
+			pids = e.Peers
 		}
+		// TODO: check e.Id matches id, if not, maybe we return error - maybe allow a force flag?
 		l = e
 	}
+
+	for _, id := range pids {
+		if id != n.Id {
+			n.peers[id] = State{}
+		}
+	}
+
+	// TODO(bmizerany): if not snapshot found in log, return error!!!!!
 
 	return n
 }
